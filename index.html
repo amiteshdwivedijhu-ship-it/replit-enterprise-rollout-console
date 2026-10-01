@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise Agent Rollout Console · Replit (synthetic prototype)</title>
+<meta name="description" content="Unofficial synthetic prototype of an Enterprise Agent Rollout Console for Replit: a synthetic enterprise pilot stub (department, builders, data sensitivity), an Agent value packet (use cases, connectors, skills), an enterprise readiness packet (SSO/SAML, SCIM, admin controls, audit logs, single-tenant Cloud-Prem), a human gate (Approve company-wide rollout, Expand pilot seats, Hold for security review, Escalate to field eng), and adoption impact. No accounts, no sign-in, no Replit API calls.">
+<style>
+  :root {
+    --bg: #0E1525;
+    --bg-soft: #111A2E;
+    --card: #151E33;
+    --card-2: #1B2740;
+    --ink: #F5F9FC;
+    --ink-soft: #C7D3E3;
+    --gray: #8FA0B8;
+    --gray-soft: #5D6B84;
+    --line: #23304D;
+    --line-2: #2E3D5E;
+    --orange: #FF3C00;
+    --orange-deep: #E63500;
+    --orange-soft: rgba(255, 60, 0, .13);
+    --green: #37C871;
+    --green-soft: rgba(55, 200, 113, .13);
+    --red: #F25F5C;
+    --red-soft: rgba(242, 95, 92, .14);
+    --amber: #FFB454;
+    --amber-soft: rgba(255, 180, 84, .14);
+    --radius: 14px;
+    --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: var(--font); font-size: 15px; line-height: 1.5; }
+  code, .mono { font-family: var(--mono); }
+
+  /* ---------- topbar ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+  .rpl-mark { display: flex; align-items: center; gap: 8px; }
+  .rpl-logo { display: grid; place-items: center; width: 26px; height: 26px; }
+  .rpl-name { font-weight: 800; letter-spacing: .01em; font-size: 14.5px; }
+  .rpl-name small { color: var(--gray); font-weight: 700; font-size: 11.5px; display: block; line-height: 1.2; }
+  .crumb { display: none; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; color: var(--gray);
+    background: var(--card); border: 1px solid var(--line);
+    white-space: nowrap; min-height: 24px;
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.warn { color: var(--amber); background: var(--amber-soft); border-color: #5a4a22; }
+  .chip.warn .dot { background: var(--amber); }
+
+  /* ---------- walkthrough bar ---------- */
+  .walk {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 14px 0 0; padding: 12px 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  }
+  .walk-label { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--gray); font-weight: 800; }
+  .steps { display: flex; gap: 5px; align-items: center; }
+  .step-dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 11px; font-weight: 800;
+    color: var(--gray-soft); background: #20273a;
+  }
+  .step-dot.past { background: var(--orange); color: #fff; }
+  .step-dot.now { background: var(--orange); color: #fff; box-shadow: 0 0 0 3px rgba(255,60,0,.22); }
+  .caption { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; color: var(--ink-soft); font-size: 13px; font-weight: 500; }
+  .caption b { color: var(--orange-deep); font-weight: 800; }
+  .walk-actions { display: flex; gap: 8px; width: 100%; }
+  .walk-actions button { flex: 1 1 auto; }
+
+  button {
+    font: inherit; cursor: pointer; touch-action: manipulation;
+    min-height: 46px; padding: 10px 16px; border-radius: 10px;
+    font-weight: 800; font-size: 14.5px;
+  }
+  button.primary {
+    color: #fff; background: var(--orange); border: none;
+  }
+  button.primary:hover { background: var(--orange-deep); }
+  button.primary:disabled { background: #3a2a24; color: #7d665c; cursor: default; }
+  button.outline {
+    color: #FF7A45; background: var(--card);
+    border: 1.5px solid #FF7A45;
+  }
+  button.outline:hover { background: var(--orange-soft); }
+  button.danger {
+    color: #fff; background: var(--red); border: none;
+  }
+  button.danger:hover { background: #D64540; }
+  button.ghost {
+    color: var(--ink-soft); background: var(--card);
+    border: 1px solid var(--line-2);
+  }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+  /* ---------- hero ---------- */
+  .hero { margin: 10px 0 0; padding: 16px 14px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius); }
+  .hero h1 { margin: 0; font-size: 19px; font-weight: 900; letter-spacing: .01em; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+  .hero .flow { margin: 8px 0 0; font-family: var(--mono); font-size: 12px; color: var(--gray); }
+
+  /* ---------- layout ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px; align-items: start;
+    margin: 14px 0 0;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 14px;
+  }
+  .card h3 {
+    margin: 0 0 2px; font-size: 14px; font-weight: 900; letter-spacing: .01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h3 .num {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px;
+    background: var(--orange); color: #fff; font-size: 12px; font-weight: 900;
+    display: grid; place-items: center;
+  }
+  .card h3 .tag { margin-left: auto; }
+  .card .sub { margin: 0 0 12px; font-size: 12px; color: var(--gray); }
+  .card .rule { height: 1px; background: var(--line); margin: 12px 0; border: none; }
+  .flash { outline: 3px solid rgba(255,60,0,.5); outline-offset: 2px; animation: pulse 1.4s ease-in-out 3; }
+  @keyframes pulse { 0%,100% { outline-color: rgba(255,60,0,.5); } 50% { outline-color: rgba(255,60,0,.12); } }
+
+  /* ---------- pilot stub ---------- */
+  .kv { display: grid; grid-template-columns: minmax(0,1fr); gap: 3px 0; font-size: 13px; }
+  .kv .row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .kv dt { color: var(--gray); font-weight: 600; min-width: 118px; }
+  .kv dd { margin: 0; color: var(--ink-soft); font-weight: 600; }
+  .kv dd code { font-size: 12px; color: var(--ink); background: #20273a; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+  .tfunc { margin: 4px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .tfunc .nm { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .tfunc .nm .fn { color: #FF7A45; }
+  .tfunc .meta { font-size: 12px; color: var(--gray); }
+  .warn-line {
+    display: flex; gap: 7px; align-items: flex-start;
+    font-size: 12.5px; color: var(--ink-soft); line-height: 1.45;
+    background: var(--orange-soft); border: 1px solid #7a3a1e; border-radius: 9px; padding: 8px 10px;
+  }
+  .warn-line b { color: #FF7A45; }
+  .sensi-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+  .sensi-tag {
+    font-size: 11.5px; font-weight: 800; color: #FF7A45;
+    background: var(--orange-soft); border: 1px solid #7a3a1e;
+    border-radius: 999px; padding: 2px 10px; min-height: 24px;
+  }
+
+  /* ---------- value + readiness packet ---------- */
+  .fit-chip {
+    display: block;
+    border: 1px solid var(--line-2); border-radius: 11px; padding: 10px 12px;
+    background: var(--card-2); margin: 0 0 10px;
+  }
+  .fit-chip:last-of-type { margin-bottom: 2px; }
+  .fit-chip .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .fit-chip .cn {
+    flex: 0 0 auto; font-size: 11px; font-weight: 900; color: #fff;
+    background: var(--orange); border-radius: 6px; padding: 1px 7px; min-height: 20px;
+    display: grid; place-items: center;
+  }
+  .fit-chip .nm { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .fit-chip .loc { font-family: var(--mono); font-size: 11px; color: var(--gray-soft); background: #20273a; border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+  .fit-chip .st { margin-left: auto; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 800;
+  }
+  .pill.ready { color: var(--green); background: var(--green-soft); }
+  .pill.pending { color: var(--amber); background: var(--amber-soft); }
+  .pill.synced { color: var(--green); background: var(--green-soft); }
+  .pill.block { color: var(--red); background: var(--red-soft); }
+  .pill.neutral { color: var(--gray); background: #20273a; }
+  .fit-chip .why { display: block; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin-top: 4px; }
+  .fit-chip .sync-hint { display: none; font-size: 12.5px; color: var(--amber); line-height: 1.45; margin-top: 4px; }
+  .fit-chip.pending-chip { cursor: pointer; }
+  .fit-chip.pending-chip:hover { border-color: var(--amber); }
+  .fit-chip.pending-chip .sync-hint { display: block; }
+  .fit-chip.synced-chip .sync-hint { display: none; }
+  .conn-row { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; margin: 2px 0 0; }
+  .conn-pill {
+    font-size: 11.5px; font-weight: 700; color: var(--ink-soft);
+    background: #20273a; border: 1px solid var(--line); border-radius: 999px;
+    padding: 2px 10px; min-height: 24px;
+  }
+  .packet-sum { font-size: 12.5px; color: var(--gray); margin: 8px 0 0; }
+
+  /* ---------- human gate ---------- */
+  .gate-btns { display: grid; grid-template-columns: minmax(0,1fr); gap: 9px; }
+  .gate-btns button { width: 100%; min-height: 48px; }
+  .gate-hint { font-size: 12.5px; color: var(--gray); margin: 10px 0 0; line-height: 1.45; }
+  .gate-hint b { color: var(--ink-soft); }
+
+  /* ---------- rollout status + impact ---------- */
+  .status-line {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    font-size: 13px; font-weight: 800;
+  }
+  .status-line .pulse-dot { width: 9px; height: 9px; border-radius: 50%; animation: blink 1.3s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .status-line.gray { color: var(--gray); }
+  .status-line.gray .pulse-dot { background: var(--gray-soft); }
+  .status-line.live { color: #FF7A45; }
+  .status-line.live .pulse-dot { background: var(--orange); }
+  .status-line.blocked { color: var(--red); }
+  .status-line.blocked .pulse-dot { background: var(--red); }
+  .metric { margin: 4px 0; }
+  .metric .row1 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .metric .k { color: var(--ink-soft); font-weight: 700; font-size: 13px; }
+  .metric .v { font-family: var(--mono); font-size: 14px; font-weight: 800; color: #FF7A45; }
+  .metric .was { font-family: var(--mono); font-size: 12px; color: var(--gray-soft); }
+  .metric .row2 { display: block; font-size: 12px; color: var(--gray); margin-top: 1px; }
+  .metric.pending .v { color: var(--gray-soft); }
+
+  /* ---------- hold panel ---------- */
+  .panel { border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 13px; background: var(--card-2); }
+  .panel h4 { margin: 0 0 6px; font-size: 13.5px; font-weight: 900; display: flex; align-items: center; gap: 7px; }
+  .hold-panel { display: none; }
+  .hold-panel.show { display: block; }
+  .hold-panel h4 .pill { margin-left: auto; }
+  .breason { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin: 5px 0; }
+  .breason .x { flex: 0 0 auto; width: 17px; height: 17px; border-radius: 50%; background: var(--red-soft); color: var(--red); font-size: 11px; font-weight: 900; display: grid; place-items: center; margin-top: 1px; }
+  .block-note { font-size: 12px; color: var(--gray); margin: 8px 0 0; line-height: 1.45; }
+  .hold-done { display: none; }
+  .hold-done.show { display: block; }
+  .hold-done p { margin: 6px 0; font-size: 12.8px; color: var(--ink-soft); line-height: 1.55; }
+  .hold-done b { color: var(--red); }
+
+  /* ---------- escalate panel ---------- */
+  .esc-panel { display: none; }
+  .esc-panel.show { display: block; }
+  .esc-panel .handoff { margin: 6px 0; font-size: 12.8px; color: var(--ink-soft); line-height: 1.55; }
+  .esc-done { display: none; }
+  .esc-done.show { display: block; }
+  .esc-done p { margin: 6px 0; font-size: 12.8px; color: var(--ink-soft); line-height: 1.55; }
+  .esc-done b { color: var(--green); }
+
+  /* ---------- console health strip ---------- */
+  .health {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin: 14px 0 0; padding: 10px 14px;
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius);
+    font-size: 12px;
+  }
+  .health .h-label { text-transform: uppercase; letter-spacing: .08em; font-size: 10px; font-weight: 900; color: var(--gray); }
+  .health .h-item { display: inline-flex; align-items: center; gap: 5px; color: var(--gray); font-weight: 700; }
+  .health .h-item b { color: var(--ink-soft); font-weight: 800; }
+  .health .h-item.g b { color: var(--green); }
+  footer { margin: 12px 14px 22px; font-size: 11.5px; color: var(--gray-soft); line-height: 1.5; }
+
+  @media (min-width: 900px) {
+    body { font-size: 14px; }
+    .topbar { padding: 12px 22px; }
+    .crumb { display: flex; gap: 5px; align-items: center; color: var(--gray); font-size: 12px; }
+    .crumb .sep { color: var(--gray-soft); margin: 0 4px; }
+    .walk { margin: 18px 22px 0; padding: 12px 18px; }
+    .walk-actions { width: auto; }
+    .hero { margin: 12px 22px 0; padding: 18px 22px; }
+    .hero h1 { font-size: 23px; }
+    .hero p { font-size: 14px; }
+    .grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); margin: 18px 22px 0; gap: 16px; }
+    .card { padding: 18px 20px; }
+    .kv { grid-template-columns: 130px minmax(0,1fr); }
+    .gate-btns { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+    .gate-btns button { min-height: 44px; }
+    .health { margin: 18px 22px 0; }
+    footer { margin: 18px 22px 26px; }
+    .fit-chip { padding: 11px 14px; }
+    .hold-panel, .esc-panel { padding: 14px 15px; }
+  }
+
+  .hidden { display: none; }
+  .fade-in { animation: fadein .45s ease-out; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; } }
+  .shake { animation: shake .4s ease-in-out 2; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="rpl-mark">
+    <svg class="rpl-logo" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M6 5.5C6 4.67157 6.67157 4 7.5 4H14.5C15.3284 4 16 4.67157 16 5.5V12H7.5C6.67157 12 6 11.3284 6 10.5V5.5Z" fill="#FF3C00"/>
+      <path d="M16 12H24.5C25.3284 12 26 12.6716 26 13.5V18.5C26 19.3284 25.3284 20 24.5 20H16V12Z" fill="#FF8A66"/>
+      <path d="M6 21.5C6 20.6716 6.67157 20 7.5 20H16V26.5C16 27.3284 15.3284 28 14.5 28H7.5C6.67157 28 6 27.3284 6 26.5V21.5Z" fill="#FF3C00"/>
+    </svg>
+    <span class="rpl-name">Replit <small>Enterprise Agent Rollout Console</small></span>
+  </div>
+  <div class="crumb"><span>Console</span><span class="sep">/</span><span>Enterprise Rollout</span></div>
+  <div class="topbar-right">
+    <span class="chip warn"><span class="dot"></span>Synthetic data</span>
+    <span class="chip"><span class="dot"></span>Not signed in</span>
+  </div>
+</header>
+
+<section class="walk" id="walk">
+  <span class="walk-label">90-sec walkthrough</span>
+  <span class="steps" id="steps">
+    <span class="step-dot" data-s="0">1</span>
+    <span class="step-dot" data-s="1">2</span>
+    <span class="step-dot" data-s="2">3</span>
+    <span class="step-dot" data-s="3">4</span>
+    <span class="step-dot" data-s="4">5</span>
+    <span class="step-dot" data-s="5">6</span>
+  </span>
+  <span class="caption" id="caption">A synthetic enterprise pilot: Meridian Financial Services, Finance Ops, 50 builders, 30 days. Replit Agent built 14 approved internal apps on internal financial data. This console is where an IT admin or enterprise PM turns a pilot into a governed company-wide rollout.</span>
+  <div class="walk-actions">
+    <button class="primary" id="nextBtn">Next step</button>
+    <button class="ghost" id="replayBtn">Replay</button>
+  </div>
+</section>
+
+<section class="hero">
+  <h1>Enterprise Agent Rollout Console <span class="accent">·</span> turn a pilot into governed company scale</h1>
+  <p>Load a synthetic enterprise pilot, review the Agent value packet and the enterprise readiness packet, pick a human gate, and watch adoption impact. All synthetic: no accounts, no sign-in, no Replit API calls.</p>
+  <div class="flow">pilot stub → Agent value + readiness → human gate → adoption impact</div>
+</section>
+
+<main class="grid">
+
+  <!-- ================= PILOT STUB ================= -->
+  <section class="card" id="colStub">
+    <h3><span class="num">1</span>Org and pilot stub <span class="tag"><span class="pill neutral">synthetic</span></span></h3>
+    <div class="sub">Finance Ops pilot · pilot started 30 days ago · not yet company-wide</div>
+
+    <div class="kv">
+      <div class="row"><dt>Org</dt>
+        <dd>Meridian Financial Services · US</dd>
+      </div>
+      <div class="row"><dt>Department</dt>
+        <dd>Finance Ops</dd>
+      </div>
+      <div class="row"><dt>Builders</dt>
+        <dd><code>50</code> pilot seats</dd>
+      </div>
+      <div class="row"><dt>Agents running</dt>
+        <dd><code>22</code> concurrent Agent 4 sessions</dd>
+      </div>
+    </div>
+
+    <hr class="rule">
+    <div class="sub" style="margin-bottom:6px;">Data sensitivity</div>
+    <div class="sensi-row">
+      <span class="sensi-tag">Internal financial data</span>
+      <span style="font-size:12px;color:var(--gray);">no PII · no customer records · not regulated</span>
+    </div>
+
+    <hr class="rule">
+    <div class="sub" style="margin-bottom:6px;">What the pilot built</div>
+    <div class="tfunc"><span class="nm">close-checklist.app</span><span class="meta">internal tool · published · approved</span></div>
+    <div class="tfunc"><span class="nm">variance-dashboard.app</span><span class="meta">data dashboard · published · approved</span></div>
+    <div class="tfunc"><span class="nm">vendor-recon.app</span><span class="meta">workflow automation · published · approved</span></div>
+
+    <hr class="rule">
+    <div class="warn-line" id="stubWarn"><b>Pilot state:</b> Agent value is proven inside Finance Ops. Company-wide rollout changes the blast radius: thousands of employees, more data, more connectors. Nothing expands until a human gate decides.</div>
+    <p class="packet-sum" id="stubNote">Pilot snapshot 8:12 AM PT · reviewed by the console 8:15 AM PT</p>
+  </section>
+
+  <!-- ================= VALUE + READINESS PACKET ================= -->
+  <section class="card" id="colPacket">
+    <h3><span class="num">2</span>Agent value + enterprise readiness packet</h3>
+    <div class="sub">What the pilot proved, and what IT needs before company-wide access</div>
+
+    <div class="fit-chip">
+      <div class="top">
+        <span class="cn">V</span>
+        <span class="nm">Agent value, from the pilot</span>
+        <span class="st"><span class="pill ready">Proven</span></span>
+      </div>
+      <span class="why">8 internal tools, 4 data dashboards, 2 workflow automations. Builders went from idea to published app without the eng backlog. Agent 4 plans, builds, tests, and iterates from prompt to production.</span>
+    </div>
+
+    <div class="conn-row">
+      <span class="conn-pill">Connectors: Snowflake</span>
+      <span class="conn-pill">Salesforce</span>
+      <span class="conn-pill">Google Drive</span>
+      <span class="conn-pill">Slack</span>
+    </div>
+    <div class="conn-row" style="margin-top:6px;">
+      <span class="conn-pill">Skills: close checklists</span>
+      <span class="conn-pill">variance reports</span>
+      <span class="conn-pill">vendor recon</span>
+    </div>
+
+    <hr class="rule">
+    <div class="sub" style="margin-bottom:10px;">Enterprise readiness · every chip is a control IT can see</div>
+
+    <div class="fit-chip" id="chipSSO">
+      <div class="top">
+        <span class="cn">S</span>
+        <span class="nm">SSO · SAML + OIDC</span>
+        <span class="st"><span class="pill ready">Ready</span></span>
+      </div>
+      <span class="why">Okta · Azure AD · Google · any compliant identity provider. Live on the enterprise org: 2,140 SSO events this week.</span>
+    </div>
+
+    <div class="fit-chip pending-chip" id="chipSCIM" role="button" tabindex="0" aria-label="SCIM provisioning pending, tap to run a simulated sync">
+      <div class="top">
+        <span class="cn">C</span>
+        <span class="nm">SCIM provisioning</span>
+        <span class="st"><span class="pill pending">Pending</span></span>
+      </div>
+      <span class="why">Automated provisioning and deprovisioning synced from the identity provider. Not yet connected for company-wide seat lifecycle.</span>
+      <span class="sync-hint">Tap to run a simulated sync from the identity provider.</span>
+    </div>
+
+    <div class="fit-chip" id="chipRBAC">
+      <div class="top">
+        <span class="cn">R</span>
+        <span class="nm">Admin controls · RBAC</span>
+        <span class="st"><span class="pill ready">Ready</span></span>
+      </div>
+      <span class="why">Granular permissions for viewing, editing, and deploying. Explicit approvals before an app ships, enforced org-wide.</span>
+    </div>
+
+    <div class="fit-chip" id="chipAudit">
+      <div class="top">
+        <span class="cn">A</span>
+        <span class="nm">Audit logs</span>
+        <span class="st"><span class="pill ready">Ready</span></span>
+      </div>
+      <span class="why">Full visibility into who did what and when across the organization. 30-day retention, exportable to the security team.</span>
+    </div>
+
+    <div class="fit-chip" id="chipDeploy">
+      <div class="top">
+        <span class="cn">D</span>
+        <span class="nm">Deployment · dedicated single-tenant</span>
+        <span class="st"><span class="pill ready">Ready</span></span>
+      </div>
+      <span class="why">Dedicated GCP project, single-tenant option with a Cloud-Prem path for stricter requirements. Pilot runs isolated from shared cloud.</span>
+    </div>
+
+    <p class="packet-sum" id="packetSum">4 of 5 readiness controls ready · 1 pending (SCIM)</p>
+  </section>
+
+  <!-- ================= HUMAN GATE ================= -->
+  <section class="card" id="colGate">
+    <h3><span class="num">3</span>Human gate</h3>
+    <div class="sub">A person decides how far Agent goes. The console makes the tradeoff legible.</div>
+
+    <div class="gate-btns">
+      <button class="primary" id="approveBtn">Approve company-wide rollout</button>
+      <button class="outline" id="expandBtn">Expand pilot seats</button>
+      <button class="danger" id="holdBtn">Hold for security review</button>
+      <button class="ghost" id="escBtn">Escalate to field eng</button>
+    </div>
+
+    <p class="gate-hint" id="gateHint">Start with the readiness packet: <b>tap the SCIM chip</b> to finish the sync, then <b>Approve company-wide rollout</b>. Hold stays available if security needs to stop the rollout.</p>
+
+    <div id="holdPanel" class="panel hold-panel">
+      <h4>Rollout held for security review <span class="pill block">Rollout blocked</span></h4>
+      <p class="handoff" style="font-size:12.5px;color:var(--ink-soft);line-height:1.5;">Company-wide rollout expands Agent to 4,200 employees and more data. The console flags what security must sign off before that happens.</p>
+      <div class="breason"><span class="x">✕</span><span><b style="color:var(--ink);">DLP policy missing</b> — no data-loss prevention policy defined for Agent-built apps that touch internal financial data</span></div>
+      <div class="breason"><span class="x">✕</span><span><b style="color:var(--ink);">Single-tenant at scale unconfirmed</b> — Cloud-Prem path exists, production isolation plan for company-wide use is not signed off</span></div>
+      <div class="breason"><span class="x">✕</span><span><b style="color:var(--ink);">Connector catalog unscoped</b> — Snowflake read-only role is finance-only; org-wide connector access has no review</span></div>
+      <p class="block-note">Rollout stays blocked until security signs off. The pilot keeps running under its own guardrails. Nothing expands without a human decision.</p>
+      <button class="danger" id="reqReviewBtn" style="width:100%;margin-top:10px;">Request security review (simulated)</button>
+      <div id="holdDone" class="hold-done">
+        <p><b>Review requested · synthetic.</b> Attached: pilot snapshot, value + readiness packets, gate decision. Rollout remains blocked until DLP and residency sign-off. No real handoff, no Replit account.</p>
+      </div>
+    </div>
+
+    <div id="escPanel" class="panel esc-panel">
+      <h4>Escalate to field eng</h4>
+      <p class="handoff">Connector and deployment work that needs a field engineer: read-only Snowflake credentials with finance IT, a Cloud-Prem schedule for single-tenant scale, and guardrails for the org-wide connector catalog. Attach the pilot snapshot and both packets.</p>
+      <button class="ghost" id="escSendBtn" style="width:100%;">Send handoff to field eng</button>
+      <div id="escDone" class="esc-done">
+        <p><b>Handoff sent · synthetic.</b> Attached: pilot stub digest, value + readiness packets, gate decision. No real handoff, no Replit account, no API call.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATUS + IMPACT ================= -->
+  <section class="card" id="colImpact">
+    <h3><span class="num">4</span>Rollout status and adoption impact</h3>
+    <div class="sub">Land-and-expand, after a human gate decides</div>
+
+    <div class="status-line gray" id="shipStatus"><span class="pulse-dot"></span><span>Pilot only · 50 seats · rollout not decided</span></div>
+
+    <hr class="rule">
+
+    <div class="metric pending" id="mBuilders">
+      <div class="row1"><span class="k">Active builders</span><span class="v" id="mBuildersV">50</span><span class="was" id="mBuildersWas">pilot baseline</span></div>
+      <span class="row2">Builders who shipped at least one app in the last 30 days. Company-wide: 4,200 employees eligible.</span>
+    </div>
+
+    <div class="metric pending" id="mApps">
+      <div class="row1"><span class="k">Apps published</span><span class="v" id="mAppsV">14</span><span class="was" id="mAppsWas">pilot baseline</span></div>
+      <span class="row2">Internal tools, dashboards, and automations live under explicit approval. Cumulative since pilot start.</span>
+    </div>
+
+    <div class="metric pending" id="mTfa">
+      <div class="row1"><span class="k">Median time-to-first-app</span><span class="v" id="mTfaV">4.2 d</span><span class="was" id="mTfaWas">pilot baseline</span></div>
+      <span class="row2">From first prompt to a published app, median per builder. Compares with the org's 11-week eng ticket queue.</span>
+    </div>
+
+    <div class="metric pending" id="mGuard">
+      <div class="row1"><span class="k">Governance guardrails</span><span class="v" id="mGuardV">On</span><span class="was" id="mGuardWas">explicit approvals · audit log</span></div>
+      <span class="row2">SSO, SCIM lifecycle, RBAC, and audit logging follow every seat at any rollout scale.</span>
+    </div>
+  </section>
+</main>
+
+<section class="health">
+  <span class="h-label">Console health · secondary data only</span>
+  <span class="h-item g" id="hStatus">Status <b>Pilot only</b></span>
+  <span class="h-item" id="hScim">SCIM <b>pending</b></span>
+  <span class="h-item" id="hBuilders">Builders <b>50</b></span>
+  <span class="h-item" id="hApps">Apps published <b>14</b></span>
+</section>
+
+<footer>
+  Unofficial synthetic prototype for a product manager role exercise. Not affiliated with Replit. No accounts, no sign-in, no Replit API calls. Vocabulary follows Replit public materials (replit.com, replit.com/enterprise, enterprise PM JD): Replit Agent, Agent 4, connectors, skills, SSO SAML and OIDC, SCIM, RBAC, audit logs, explicit approvals, single-tenant, Cloud-Prem, builders, publish, land-and-expand. The Enterprise Agent Rollout Console surface is an inferred admin surface built from public language, not an observed product screen.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  var state = { step: 0, scimReady: false, approved: false, expanded: false, held: false, reviewSent: false, escSent: false };
+
+  /* ---------------- copy ---------------- */
+  var CAPTIONS = [
+    "A synthetic enterprise pilot: Meridian Financial Services, Finance Ops, 50 builders, 30 days. Agent built 14 approved internal apps on internal financial data. This console is where IT decides what company-wide access means.",
+    "The value packet, from the pilot: internal tools, dashboards, workflow automations, with Snowflake, Salesforce, Google Drive, and Slack connectors. This is what the enterprise PM presents to leadership.",
+    "Readiness: SSO SAML + OIDC is live, RBAC and audit logs are on. SCIM is the last open chip. The sync completes, and only a clean packet can move to the gate.",
+    "Approve company-wide rollout: a human gate. With the packet clean, the admin approves: 4,200 employees become eligible and governance stays on at scale.",
+    "Adoption impact: active builders, apps published, time-to-first-app. The console proves the land-and-expand motion in numbers.",
+    "When a blocker is real but close, route it to field eng with the pilot packet attached. The handoff is logged and the rollout stays safe until the config lands."
+  ];
+  var STEP_NAMES = ["Load pilot", "Value packet", "Readiness", "Approve rollout", "Impact", "Guard rails"];
+
+  function refreshWalk() {
+    var dots = document.querySelectorAll(".step-dot");
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].className = "step-dot" + (i < state.step ? " past" : (i === state.step ? " now" : ""));
+    }
+    $("caption").innerHTML = "<b>Step " + (state.step + 1) + " · " + STEP_NAMES[state.step] + ":</b> " + CAPTIONS[state.step];
+    $("nextBtn").disabled = state.step >= CAPTIONS.length - 1;
+    $("nextBtn").textContent = state.step >= CAPTIONS.length - 1 ? "Done" : "Next step";
+  }
+
+  function flash(el) {
+    if (typeof el === "string") { el = $(el); }
+    el.classList.remove("flash");
+    void el.offsetWidth;
+    el.classList.add("flash");
+    setTimeout(function () { el.classList.remove("flash"); }, 4600);
+  }
+
+  function shake(el) {
+    if (typeof el === "string") { el = $(el); }
+    el.classList.remove("shake");
+    void el.offsetWidth;
+    el.classList.add("shake");
+    setTimeout(function () { el.classList.remove("shake"); }, 1000);
+  }
+
+  /* ---------------- readiness packet ---------------- */
+  function refreshSummary() {
+    var n = state.scimReady ? 5 : 4;
+    $("packetSum").textContent = (state.scimReady ? "5 of 5 readiness controls ready · packet clean" : "4 of 5 readiness controls ready · 1 pending (SCIM)");
+    $("hScim").innerHTML = "SCIM <b>" + (state.scimReady ? "synced" : "pending") + "</b>";
+  }
+
+  function scimSync() {
+    if (state.scimReady) { return; }
+    state.scimReady = true;
+    var chip = $("chipSCIM");
+    chip.className = "fit-chip synced-chip";
+    chip.removeAttribute("role");
+    chip.removeAttribute("tabindex");
+    chip.removeAttribute("aria-label");
+    var pill = chip.querySelector(".pill");
+    pill.className = "pill synced";
+    pill.textContent = "Synced";
+    chip.querySelector(".why").innerHTML = "Provisioning and deprovisioning follow the identity provider. SCIM sync completed 8:22 AM PT: 50 pilot seats in sync, org-wide readiness confirmed.";
+    chip.querySelector(".sync-hint").innerHTML = "";
+    refreshSummary();
+    flash(chip);
+  }
+
+  $("chipSCIM").addEventListener("click", scimSync);
+  $("chipSCIM").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); scimSync(); }
+  });
+
+  /* ---------------- gates ---------------- */
+  function approve() {
+    if (state.approved) { return; }
+    if (state.held) {
+      shake($("colGate"));
+      $("gateHint").innerHTML = "Approve is blocked: the <b>security hold is open</b> with 3 gaps. The rollout stays blocked until security signs off on DLP, single-tenant at scale, and the connector catalog.";
+      flash($("holdPanel"));
+      return;
+    }
+    if (!state.scimReady) {
+      shake($("colGate"));
+      $("gateHint").innerHTML = "Approve is blocked until the readiness packet is clean: <b>SCIM is still pending</b>. Tap the SCIM chip to finish the sync, then Approve. Nothing goes company-wide ungoverned.";
+      flash($("chipSCIM"));
+      return;
+    }
+    state.approved = true;
+    $("shipStatus").className = "status-line live fade-in";
+    $("shipStatus").innerHTML = '<span class="pulse-dot"></span><span>Company standard · rollout approved · 4,200 employees eligible</span>';
+    ["mBuilders", "mApps", "mTfa"].forEach(function (id) { $(id).classList.remove("pending"); });
+    $("mBuildersV").textContent = "318";
+    $("mBuildersWas").textContent = "was 50 · pilot";
+    $("mAppsV").textContent = "173";
+    $("mAppsWas").textContent = "was 14 · pilot";
+    $("mTfaV").textContent = "1.8 d";
+    $("mTfaWas").textContent = "was 4.2 d · pilot";
+    $("hStatus").innerHTML = "Status <b>Company standard</b>";
+    $("hBuilders").innerHTML = "Builders <b>318</b>";
+    $("hApps").innerHTML = "Apps published <b>173</b>";
+    $("approveBtn").disabled = true;
+    $("gateHint").innerHTML = "Approved: <b>Company standard</b>. SSO, SCIM, RBAC, audit logs, and the single-tenant deployment follow every seat. Guard rails stay on for every future Agent push.";
+    flash($("colImpact"));
+  }
+
+  function expand() {
+    if (state.expanded) { return; }
+    if (state.held) {
+      shake($("colGate"));
+      $("gateHint").innerHTML = "Expand is blocked while the <b>security hold is open</b>. The pilot keeps running on its own guardrails; no seat growth until sign-off.";
+      flash($("holdPanel"));
+      return;
+    }
+    state.expanded = true;
+    $("shipStatus").className = "status-line live fade-in";
+    $("shipStatus").innerHTML = '<span class="pulse-dot"></span><span>Pilot expanded · 50 → 200 seats · governance on</span>';
+    ["mBuilders", "mApps", "mTfa"].forEach(function (id) { $(id).classList.remove("pending"); });
+    $("mBuildersV").textContent = "176";
+    $("mBuildersWas").textContent = "was 50 · pilot";
+    $("mAppsV").textContent = "41";
+    $("mAppsWas").textContent = "was 14 · pilot";
+    $("mTfaV").textContent = "3.5 d";
+    $("mTfaWas").textContent = "was 4.2 d · pilot";
+    $("hStatus").innerHTML = "Status <b>Pilot expanded</b>";
+    $("hBuilders").innerHTML = "Builders <b>176</b>";
+    $("hApps").innerHTML = "Apps published <b>41</b>";
+    $("expandBtn").disabled = true;
+    $("gateHint").innerHTML = "Expanded: <b>200 pilot seats</b>. Governance guardrails stay on for 30 more days, then the same gate decides company-wide.";
+    flash($("colImpact"));
+  }
+
+  function hold() {
+    if (state.held) { return; }
+    state.held = true;
+    var p = $("holdPanel");
+    p.classList.remove("fade-in");
+    void p.offsetWidth;
+    p.className = "panel hold-panel show";
+    p.classList.add("fade-in");
+    $("shipStatus").className = "status-line blocked";
+    $("shipStatus").innerHTML = '<span class="pulse-dot"></span><span>Rollout held · security review · rollout blocked</span>';
+    ["mBuilders", "mApps", "mTfa"].forEach(function (id) { $(id).classList.add("pending"); });
+    $("mBuildersV").textContent = "50";
+    $("mBuildersWas").textContent = "held · pilot continues";
+    $("mAppsV").textContent = "14";
+    $("mAppsWas").textContent = "held · pilot continues";
+    $("mTfaV").textContent = "4.2 d";
+    $("mTfaWas").textContent = "held · pilot continues";
+    $("hStatus").innerHTML = "Status <b>Rollout held</b>";
+    $("holdBtn").disabled = true;
+    $("gateHint").innerHTML = "Held: the rollout <b>cannot expand</b> until security signs off on DLP, single-tenant at scale, and the connector catalog. Reasons are listed above. Approve stays blocked while the hold is open.";
+    flash(p);
+  }
+
+  $("reqReviewBtn").addEventListener("click", function () {
+    if (state.reviewSent) { return; }
+    state.reviewSent = true;
+    $("reqReviewBtn").className = "hidden";
+    var d = $("holdDone");
+    d.className = "hold-done show fade-in";
+  });
+
+  function escalate() {
+    var p = $("escPanel");
+    p.classList.remove("fade-in");
+    void p.offsetWidth;
+    p.className = "panel esc-panel show";
+    p.classList.add("fade-in");
+    flash(p);
+  }
+
+  $("escSendBtn").addEventListener("click", function () {
+    if (state.escSent) { return; }
+    state.escSent = true;
+    $("escSendBtn").className = "hidden";
+    var d = $("escDone");
+    d.className = "esc-done show fade-in";
+  });
+
+  /* ---------------- walkthrough ---------------- */
+  var steps = [
+    function () { flash($("colStub")); },
+    function () { flash($("colPacket")); },
+    function () { scimSync(); },
+    function () { approve(); },
+    function () { flash($("colImpact")); },
+    function () { escalate(); }
+  ];
+
+  function goNext() {
+    if (state.step < CAPTIONS.length - 1) {
+      state.step += 1;
+      refreshWalk();
+      steps[state.step]();
+    }
+  }
+
+  function replay() {
+    state = { step: 0, scimReady: false, approved: false, expanded: false, held: false, reviewSent: false, escSent: false };
+    var chip = $("chipSCIM");
+    chip.className = "fit-chip pending-chip";
+    chip.setAttribute("role", "button");
+    chip.setAttribute("tabindex", "0");
+    chip.setAttribute("aria-label", "SCIM provisioning pending, tap to run a simulated sync");
+    var pill = chip.querySelector(".pill");
+    pill.className = "pill pending";
+    pill.textContent = "Pending";
+    chip.querySelector(".why").innerHTML = "Automated provisioning and deprovisioning synced from the identity provider. Not yet connected for company-wide seat lifecycle.";
+    chip.querySelector(".sync-hint").innerHTML = "Tap to run a simulated sync from the identity provider.";
+    $("packetSum").textContent = "4 of 5 readiness controls ready · 1 pending (SCIM)";
+    $("shipStatus").className = "status-line gray";
+    $("shipStatus").innerHTML = '<span class="pulse-dot"></span><span>Pilot only · 50 seats · rollout not decided</span>';
+    ["mBuilders", "mApps", "mTfa"].forEach(function (id) { $(id).classList.add("pending"); });
+    $("mBuildersV").textContent = "50";
+    $("mBuildersWas").textContent = "pilot baseline";
+    $("mAppsV").textContent = "14";
+    $("mAppsWas").textContent = "pilot baseline";
+    $("mTfaV").textContent = "4.2 d";
+    $("mTfaWas").textContent = "pilot baseline";
+    $("hStatus").innerHTML = "Status <b>Pilot only</b>";
+    $("hScim").innerHTML = "SCIM <b>pending</b>";
+    $("hBuilders").innerHTML = "Builders <b>50</b>";
+    $("hApps").innerHTML = "Apps published <b>14</b>";
+    $("approveBtn").disabled = false;
+    $("expandBtn").disabled = false;
+    $("holdBtn").disabled = false;
+    $("gateHint").innerHTML = "Start with the readiness packet: <b>tap the SCIM chip</b> to finish the sync, then <b>Approve company-wide rollout</b>. Hold stays available if security needs to stop the rollout.";
+    $("holdPanel").className = "panel hold-panel";
+    $("holdDone").className = "hold-done";
+    $("reqReviewBtn").className = "danger";
+    $("escPanel").className = "panel esc-panel";
+    $("escSendBtn").className = "ghost";
+    $("escDone").className = "esc-done";
+    refreshWalk();
+  }
+
+  $("nextBtn").addEventListener("click", goNext);
+  $("replayBtn").addEventListener("click", replay);
+  $("approveBtn").addEventListener("click", approve);
+  $("expandBtn").addEventListener("click", expand);
+  $("holdBtn").addEventListener("click", hold);
+  $("escBtn").addEventListener("click", escalate);
+
+  refreshWalk();
+})();
+</script>
+</body>
+</html>
